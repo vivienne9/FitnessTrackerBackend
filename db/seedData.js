@@ -1,16 +1,77 @@
 // require in the database adapter functions as you write them (createUser, createActivity...)
 // const { } = require('./');
-const client = require("./client")
+const client = require('./client');
+
+const {
+  createUser,
+  createActivity,
+  getAllActivities,
+  createRoutine,
+  getRoutinesWithoutActivities,
+  addActivityToRoutine
+} = require('./');
+
 
 async function dropTables() {
-  console.log("Dropping All Tables...")
-  // drop all tables, in the correct order
-}
+  try {
+    console.log("Starting to drop tables...");
 
+    await client.query(`
+    DROP TABLE IF EXISTS routineActivities;
+    DROP TABLE IF EXISTS routines;
+    DROP TABLE IF EXISTS activities;
+    DROP TABLE IF EXISTS users;
+  `);
+
+    console.log("Finished dropping tables!");
+  } catch (error) {
+    console.error("Error dropping tables!");
+    throw error;
+  }
+}
+  
 async function createTables() {
   console.log("Starting to build tables...")
+
   // create all tables, in the correct order
-}
+  try{
+
+  await client.query(`
+  CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username varchar(255) UNIQUE NOT NULL,
+    password varchar(255) NOT NULL
+  );
+
+  CREATE TABLE activities (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL,
+    description TEXT NOT NULL
+  );
+
+  CREATE TABLE routines (
+    id SERIAL PRIMARY KEY,
+    "creatorId" INTEGER REFERENCES users(id),
+    "isPublic" BOOLEAN DEFAULT false,
+    name VARCHAR(255) UNIQUE NOT NULL, 
+    goal TEXT NOT NULL
+  );
+
+  CREATE TABLE routineActivities (
+    id SERIAL PRIMARY KEY,
+    "activityId" INTEGER REFERENCES activities(id) UNIQUE,
+    "rountineId" INTEGER REFERENCES routines(id) UNIQUE,
+    count INTEGER, 
+    duration INTEGER
+  );
+
+  `)
+  console.log("Finished building tables!");
+
+  }catch(error){
+    console.log(error, "error creating tables")
+  }
+  }
 
 /* 
 
@@ -26,13 +87,13 @@ async function createInitialUsers() {
       { username: "sandra", password: "sandra123" },
       { username: "glamgal", password: "glamgal123" },
     ]
-    const users = await Promise.all(usersToCreate.map(createUser))
+    const users = await Promise.all(usersToCreate.map(createUser));
 
-    console.log("Users created:")
-    console.log(users)
-    console.log("Finished creating users!")
+    console.log("Users created:");
+    console.log(users);
+    console.log("Finished creating users!");
   } catch (error) {
-    console.error("Error creating users!")
+    console.error("Error creating users!");
     throw error
   }
 }
@@ -179,12 +240,12 @@ async function createInitialRoutineActivities() {
 
 async function rebuildDB() {
   try {
-    await dropTables()
-    await createTables()
-    await createInitialUsers()
-    await createInitialActivities()
-    await createInitialRoutines()
-    await createInitialRoutineActivities()
+    await dropTables();
+    await createTables();
+    await createInitialUsers();
+    await createInitialActivities();
+    await createInitialRoutines();
+    await createInitialRoutineActivities();
   } catch (error) {
     console.log("Error during rebuildDB")
     throw error
