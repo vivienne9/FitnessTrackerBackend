@@ -11,7 +11,7 @@
     "test": "jest --runInBand",
     "test:watch": "jest --runInBand --watchAll",
     "test:watch:api": "jest --watchAll api",
-    "test:watch:db": "jest --watchAll api"
+    "test:watch:db": "jest --watchAll db"
   },
   "repository": {
     "type": "git",

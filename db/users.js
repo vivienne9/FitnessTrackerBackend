@@ -6,105 +6,87 @@ const bcrypt = require('bcrypt')
 // user functions
 async function createUser({ username, password }) {
 
+  //eslint-disable-next-line no-useless-catch
   try{
    const hashedPassword = await bcrypt.hash(password, SALT_COUNT);
 
    const { rows:[user] } = await client.query(`
     INSERT INTO users(username,password)
     VALUES($1,$2)
-    RETURNING *;
+    ON CONFLICT (username) DO NOTHING
+    RETURNING id, username;
     `,[username,hashedPassword]);
-    delete user.password;
+    // delete user.password;
     return user;
 
   }catch(error){
-    throw Error('failed to create user')}
-}
-
-async function getUser({ username, password }) {
-  const user = await getUserByUserName(username);
-  const hashedPassword = user.password;
-
-  // isValid will be a boolean based on whether the password matches the hashed password
-  const isValid = await bcrypt.compare(password, hashedPassword);
-
-  if (isValid){
-  try {
-    const { row:[user ]} = await client.query(`
-      SELECT id, username FROM users;`
-      );
-    return user;
-    
-  } catch (error) {
-    console.log(error,"Error getting user");
+    throw error;
   }
 }
+
+async function getUserByUserName(userName) {
+
+  //eslint-disable-next-line no-useless-catch
+  try {
+    const {rows} = await client.query(`
+      SELECT * FROM users 
+      WHERE username = $1
+    `,[userName]);
+
+    if(!rows || !rows.length) return null;
+
+    const [users] = rows;
+    return users;
+
+  } catch (error) {
+    throw error;
+  }
+  }
+
+
+async function getUser({ username, password }) {
+  if (!username || !password){
+    return;
+  }
+
+  //eslint-disable-next-line no-useless-catch
+  try{
+
+    const user = await getUserByUserName(username);
+
+    if(!user) return;
+
+    const hashedPassword = user.password;
+    const passwordMatch = await bcrypt.compare(password, hashedPassword);
+
+    if(!passwordMatch) return;
+
+    delete user.password;
+
+    return user;
+
+  }catch (error){
+    throw error;
+  }
 
 }
 
 async function getUserById(userId) {
 
+  //eslint-disable-next-line no-useless-catch
   try {
-    const { row: [user] } = await client.query(`
-      SELECT id, username  FROM users
+    const { rows } = await client.query(`
+      SELECT id,username FROM users
       WHERE id=${userId};
       `);
 
-    if (!user) {
-          return null
-    }
-
-    return user;
-  } catch (error) {
-    console.log(error,"Error getting user by id");
-  }
-
-}
-
-async function getUserByUserName(username) {
-
-  try {
-    const { row: [user] } = await client.query(`
-      SELECT id, username, password FROM users
-      WHERE username=${username};
-      `);
-
-    if (!user) {
-          return null
-    }
-
-    return user;
-  } catch (error) {
-    throw new Error (error, "Error getting user by name");
-  }
-}
-
-async function createActivity ({ name, description }) {
-
-  try {
-    const { rows:activity} = await client.query(`
-    INSERT INTO activities (name,description)
-    VALUES ($1, $2)
-    ON CONFLICT (name) DO NOTHING 
-    RETURNING *;
-    `, [name, description]);
+    if (!rows) return null;
     
-    return activity;
+    const [users] = rows;
+    return users;
+
   } catch (error) {
-     console.log(error,"Error creating activity");
-  }
-
-}
-
-async function getAllActivities() {
-
-  try {
-    const { rows } = await client.query(`
-      SELECT id,name,description FROM activities;`
-      );
-    return rows;
-  } catch (error) {
-    console.log(error,"Error getting activities");
+    throw error;
   }
 
 }
@@ -112,11 +94,7 @@ async function getAllActivities() {
 
 module.exports = {
   createUser,
-  getUser,
-  getUserById,
   getUserByUserName,
-  createActivity,
-  getAllActivities
+  getUser,
+  getUserById
 }
-
-
