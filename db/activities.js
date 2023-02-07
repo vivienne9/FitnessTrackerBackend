@@ -76,7 +76,7 @@ async function attachActivitiesToRoutines(routines) {
 
   //eslint-disable-next-line no-useless-catch
     try {
-      const { rows : [activity] } = await client.query(`
+      const { rows : activity } = await client.query(`
       SELECT activities.*,
       routine_activities."routineId",
       routine_activities."activityId",
@@ -96,7 +96,6 @@ async function attachActivitiesToRoutines(routines) {
       throw error;
     }
   }
-
 
 async function updateActivity({ id,...fields}) {
   // don't try to update the id

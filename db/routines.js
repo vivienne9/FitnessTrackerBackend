@@ -1,5 +1,7 @@
 /* eslint-disable no-undef */
 const client = require("./client");
+const { attachActivitiesToRoutines } = require('./activities')
+
 
 async function createRoutine({ creatorId, isPublic, name, goal }) {
 
@@ -40,22 +42,19 @@ async function getAllRoutines() {
 
   //eslint-disable-next-line no-useless-catch
   try {
-    const { rows:routine} = await client.query(`
+    const { rows:routines} = await client.query(`
       SELECT routines.* ,
       users.username AS "creatorName"
       FROM routines
       JOIN users ON users.id = routines."creatorId";
       `);
 
-
-      // for (let i = 0; i < routine.length; i++) {
-
-      //   routine[i].activities = await attachActivitiesToRoutines (routine[i]);
-
-      // }
+      for (let i = 0; i < routines.length; i++) {
+        routines[i].activities = await attachActivitiesToRoutines (routines[i]);
+      }
     
-    console.log(routine);
-    return routine;
+    console.log(routines);
+    return routines;
 
   } catch (error) {
     throw error;
@@ -86,7 +85,7 @@ async function getRoutinesWithoutActivities() {
 async function getAllPublicRoutines() {
   //eslint-disable-next-line no-useless-catch
    try {
-    const { rows:routine} = await client.query(`
+    const { rows:routines} = await client.query(`
       SELECT routines.*, users.username AS "creatorName"
       FROM routines
       JOIN users ON users.id = routines."creatorId"
@@ -94,13 +93,12 @@ async function getAllPublicRoutines() {
       `);
 
 
-      // for (let i = 0; i < routine.length; i++) {
+      for (let i = 0; i < routines.length; i++) {
+        routines[i].activities = await attachActivitiesToRoutines (routines[i]);
+      }
 
-      //   routine[i].activities = await attachActivitiesToRoutines (routine[i]);
-      // }
-
-     console.log(routine);
-     return routine;
+     console.log(routines);
+     return routines;
 
   } catch (error) {
     throw error;
@@ -112,23 +110,22 @@ async function getAllRoutinesByUser({ username }) {
 
 //eslint-disable-next-line no-useless-catch
 try {
-  const { rows:routine} = await client.query(`
+  const { rows:routines} = await client.query(`
     SELECT routines.*, users.username AS "creatorName" 
     FROM routines
     JOIN users ON users.id = routines."creatorId"
     WHERE users.username = $1;
     `,[username]);
 
-    if (!routine) return null;
+    if (!routines) return null;
 
 
-    // for (let i = 0; i < routine.length; i++) {
+    for (let i = 0; i < routines.length; i++) {
+      routines[i].activities = await attachActivitiesToRoutines (routines[i]);
+    }
 
-    //   routine[i].activities = await attachActivitiesToRoutines (routine[i]);
-    // }
-
-   console.log(routine);
-   return routine;
+   console.log(routines);
+   return routines;
 
 } catch (error) {
   throw error;
@@ -140,39 +137,83 @@ async function getPublicRoutinesByUser({ username }) {
 
 //eslint-disable-next-line no-useless-catch
 try {
-  const { rows:routine} = await client.query(`
+  const { rows:routines} = await client.query(`
   SELECT routines.*, users.username AS "creatorName" 
   FROM routines
   JOIN users ON users.id = routines."creatorId"
   WHERE users.username = $1 AND "isPublic" = true;
     `,[username]);
 
-    if (!routine) return null;
+    if (!routines) return null;
+   
+    for (let i = 0; i < routines.length; i++) {
+      routines[i].activities = await attachActivitiesToRoutines (routines[i]);
+    }
 
-
-    // for (let i = 0; i < routine.length; i++) {
-
-    //   routine[i].activities = await attachActivitiesToRoutines (routine[i]);
-    // }
-
-   console.log(routine);
-   return routine;
+   console.log(routines);
+   return routines;
 
 } catch (error) {
   throw error;
 }
 }
 
-async function getPublicRoutinesByActivity({ id }) {
+async function getPublicRoutinesByActivity({ activityId }) {
+
+  //eslint-disable-next-line no-useless-catch
+  try{
+  const { rows:routines} = await client.query(`
+  SELECT routines.*, users.username AS "creatorName" ,
+  FROM routines
+  JOIN users ON users.id = routines."creatorId"
+  JOIN routine_activities ON routine_activities."activityId" = activities.id
+  WHERE routine_activities."activityId" = $1;
+  ;`,[activityId]);
+
+    if (!routines) return null;
+   
+    for (let i = 0; i < routines.length; i++) {
+      routines[i].activities = await attachActivitiesToRoutines (routines[i]);
+    }
+
+   console.log(routines);
+   return routines;
+
+} catch (error) {
+  throw error;
+}
 
 }
 
 async function updateRoutine({ id, ...fields }) {
 
+  const setString = Object.keys(fields).map(
+    (key, index) => `"${key}"=$${index + 1}`
+).join(', ');
 
+
+  if (setString.length === 0) {
+    return;
+  }
+
+  //eslint-disable-next-line no-useless-catch
+  try {
+    const { rows: [routine] } = await client.query(`
+    UPDATE routines
+    SET ${setString}
+    WHERE id=${id}
+    RETURNING *;
+    `, Object.values(fields),);
+
+    return routine;
+
+  }catch (error){
+    throw error;
+  }
 }
 
 async function destroyRoutine(id) {
+
 
 
 
