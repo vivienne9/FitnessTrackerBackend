@@ -5,12 +5,13 @@ const bcrypt = require('bcrypt')
 // database functions
 // user functions
 async function createUser({ username, password }) {
+  
+  const hashedPassword = await bcrypt.hash(password, SALT_COUNT);
 
   //eslint-disable-next-line no-useless-catch
   try{
-   const hashedPassword = await bcrypt.hash(password, SALT_COUNT);
 
-   const { rows:[user] } = await client.query(`
+   const { rows: [user] } = await client.query(`
     INSERT INTO users(username,password)
     VALUES($1,$2)
     ON CONFLICT (username) DO NOTHING
@@ -24,24 +25,26 @@ async function createUser({ username, password }) {
   }
 }
 
-async function getUserByUserName(userName) {
-
-  //eslint-disable-next-line no-useless-catch
+async function getUserByUsername(userName) {
+  // first get the user
+    //eslint-disable-next-line no-useless-catch
   try {
     const {rows} = await client.query(`
-      SELECT * FROM users 
-      WHERE username = $1
-    `,[userName]);
-
-    if(!rows || !rows.length) return null;
-
-    const [users] = rows;
-    return users;
-
+      SELECT *
+      FROM users
+      WHERE username = $1;
+    `, [userName]);
+    // if it doesn't exist, return null
+    if (!rows || !rows.length) return null;
+    // if it does:
+    // delete the 'password' key from the returned object
+    const [user] = rows;
+    // delete user.password;
+    return user;
   } catch (error) {
-    throw error;
+    console.error(error)
   }
-  }
+}
 
 
 async function getUser({ username, password }) {
@@ -52,7 +55,7 @@ async function getUser({ username, password }) {
   //eslint-disable-next-line no-useless-catch
   try{
 
-    const user = await getUserByUserName(username);
+    const user = await getUserByUsername(username);
 
     if(!user) return;
 
@@ -75,15 +78,15 @@ async function getUserById(userId) {
 
   //eslint-disable-next-line no-useless-catch
   try {
-    const { rows } = await client.query(`
-      SELECT id,username FROM users
-      WHERE id=${userId};
-      `);
+    const { rows: [user] } = await client.query(`
+      SELECT * FROM users
+      WHERE id = $1;
+      `,[userId]);
 
-    if (!rows) return null;
+    if (!user) return null;
+    delete user.password;
     
-    const [users] = rows;
-    return users;
+    return user;
 
   } catch (error) {
     throw error;
@@ -94,7 +97,7 @@ async function getUserById(userId) {
 
 module.exports = {
   createUser,
-  getUserByUserName,
+  getUserByUsername,
   getUser,
   getUserById
 }

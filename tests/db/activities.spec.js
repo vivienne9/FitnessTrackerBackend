@@ -10,7 +10,7 @@ const {
   createActivity,
   updateActivity,
   getActivityById,
-  getActivityByName,
+  getActivityByName
 } = require("../../db");
 const { createFakeActivity } = require("../helpers");
 

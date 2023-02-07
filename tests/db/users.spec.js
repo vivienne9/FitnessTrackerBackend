@@ -11,7 +11,7 @@ const {
   getUserById,
   createUser,
   getUser,
-  getUserByUsername,
+  getUserByUsername
 } = require("../../db");
 const { createFakeUser } = require("../helpers");
 
