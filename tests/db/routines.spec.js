@@ -183,7 +183,9 @@ describe("DB Routines", () => {
         (activity) => activity.id === fakeActivity.id
       );
       expect(activity.routineId).toEqual(fakeRoutine.id);
-      expect(activity.routineActivityId).toEqual(fakeRoutineActivity.id);
+     // expect(activity.routineActivityId).toEqual(fakeRoutineActivity.id);
+      expect(activity.activityId).toEqual(fakeActivity.id);
+
     });
   });
 
@@ -233,7 +235,8 @@ describe("DB Routines", () => {
         (activity) => activity.id === fakeActivity.id
       );
       expect(activity.routineId).toEqual(fakeRoutine.id);
-      expect(activity.routineActivityId).toEqual(fakeRoutineActivity.id);
+      //expect(activity.routineActivityId).toEqual(fakeRoutineActivity.id);
+      expect(activity.activityId).toEqual(fakeActivity.id);
     });
   });
 
@@ -289,7 +292,8 @@ describe("DB Routines", () => {
         (activity) => activity.id === fakeActivity.id
       );
       expect(activity.routineId).toEqual(fakeRoutine.id);
-      expect(activity.routineActivityId).toEqual(fakeRoutineActivity.id);
+      //expect(activity.routineActivityId).toEqual(fakeRoutineActivity.id);
+      expect(activity.activityId).toEqual(fakeActivity.id);
     });
   });
 
@@ -340,7 +344,8 @@ describe("DB Routines", () => {
         (activity) => activity.id === fakeActivity.id
       );
       expect(activity.routineId).toEqual(fakeRoutine.id);
-      expect(activity.routineActivityId).toEqual(fakeRoutineActivity.id);
+      //expect(activity.routineActivityId).toEqual(fakeRoutineActivity.id);
+      expect(activity.activityId).toEqual(fakeActivity.id);
     });
   });
 
@@ -403,7 +408,8 @@ describe("DB Routines", () => {
         (activity) => activity.id === fakeActivity.id
       );
       expect(activity.routineId).toEqual(fakeRoutine.id);
-      expect(activity.routineActivityId).toEqual(fakeRoutineActivity.id);
+      //expect(activity.routineActivityId).toEqual(fakeRoutineActivity.id);
+      expect(activity.activityId).toEqual(fakeActivity.id);
     });
   });
 

@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 const client = require("./client");
-const { attachActivitiesToRoutines } = require('./activities')
+const { attachActivitiesToRoutines,getActivityById  } = require('./activities')
 
 
 async function createRoutine({ creatorId, isPublic, name, goal }) {
@@ -162,22 +162,22 @@ async function getPublicRoutinesByActivity({ activityId }) {
 
   //eslint-disable-next-line no-useless-catch
   try{
-  const { rows:routines} = await client.query(`
-  SELECT routines.*, users.username AS "creatorName" ,
-  FROM routines
-  JOIN users ON users.id = routines."creatorId"
-  JOIN routine_activities ON routine_activities."activityId" = activities.id
-  WHERE routine_activities."activityId" = $1;
-  ;`,[activityId]);
-
-    if (!routines) return null;
-   
-    for (let i = 0; i < routines.length; i++) {
-      routines[i].activities = await attachActivitiesToRoutines (routines[i]);
-    }
+  const activity = await getActivityById (activityId);
+  const routines = await getAllPublicRoutines(activity);
 
    console.log(routines);
    return routines;
+
+  //  try {
+  //   const pubRoutines = await getAllPublicRoutines()
+  //   for (let i=0; i< pubRoutines.length; i++) {
+  //     const routine = pubRoutines[i]
+  //     const actRoutine = routine.activities.filter(act => act.id === id)
+  //     if (actRoutine.length > 0) {
+  //       const routine = await getRoutineById(actRoutine[0].routineId)
+  //       return routine
+  //     }
+  //   }
 
 } catch (error) {
   throw error;
@@ -205,6 +205,19 @@ async function updateRoutine({ id, ...fields }) {
     RETURNING *;
     `, Object.values(fields),);
 
+    // Another way:
+    // const { isPublic, name , goal} = fields
+    // let returned
+    // if(!isPublic !== null && isPublic !== undefined){
+    //   const {rows:[updated]} = await client.query(`
+    //   UPDATE routines
+    //   SET "isPublic" = $1
+    //   WHERE id=$2
+    //   RETURNING *
+    //   `,[isPublic,id])
+
+    //   returned = updated
+
     return routine;
 
   }catch (error){
@@ -213,11 +226,25 @@ async function updateRoutine({ id, ...fields }) {
 }
 
 async function destroyRoutine(id) {
+    //eslint-disable-next-line no-useless-catch
+    try{
+  
+      await client.query(`
+      DELETE FROM 
+      routine_activities
+      WHERE "routineId" =${id}
+      `);
+  
+      await client.query(`
+      DELETE FROM 
+      routines 
+      WHERE id=${id}
+      `)
 
-
-
-
-}
+    }catch (error){
+      throw error;
+    }
+  }
 
 module.exports = {
   createRoutine,
